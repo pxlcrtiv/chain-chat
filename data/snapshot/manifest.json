@@ -1,0 +1,41 @@
+{
+  "generator": "chain_chat.snapshot.build_snapshot (scripts/fetch_parquet.py)",
+  "seed": 42,
+  "days": 120,
+  "per_day": 1000,
+  "start_date": "2026-04-26",
+  "end_date": "2026-08-23",
+  "transfers": 119899,
+  "labels": 25,
+  "tokens": 3,
+  "policy": "synthetic testnet-style data \u2014 no real mainnet funds; regenerate with scripts/fetch_parquet.py",
+  "schema": {
+    "transfers": [
+      "tx_hash",
+      "block_number",
+      "ts",
+      "token",
+      "amount",
+      "from_address",
+      "to_address"
+    ],
+    "labels": [
+      "address",
+      "label",
+      "category"
+    ],
+    "tokens": [
+      "token",
+      "symbol",
+      "name",
+      "usd_reference_price",
+      "decimals"
+    ]
+  },
+  "files": [
+    "transfers.parquet",
+    "labels.parquet",
+    "tokens.parquet",
+    "chainchat.db"
+  ]
+}
