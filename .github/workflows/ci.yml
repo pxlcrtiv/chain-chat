@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest
+
+      - name: Unit tests (offline, fast)
+        run: python -m pytest tests/ -q
+
+      - name: Snapshot regenerates deterministically
+        run: |
+          python scripts/fetch_parquet.py --out /tmp/snap --seed 42 --days 5 --per-day 20
+          test -f /tmp/snap/transfers.parquet
+          test -f /tmp/snap/manifest.json
+
+      - name: Demo smoke — three canned questions answered offline
+        run: |
+          python - <<'EOF'
+          from chain_chat.db import ChainDB
+          from chain_chat.nl2sql import ask
+          db = ChainDB("data/snapshot")
+          for q in [
+              "Which token moved the most yesterday?",
+              "How much USDC was transferred in the last 30 days?",
+              "Which labeled address sent the most transfers?",
+          ]:
+              a = ask(q, db, llm=None)
+              assert a.error is None, (q, a.error)
+              assert len(a.text) > 10, (q, a.text)
+              print(f"OK {q!r} -> {a.text[:60]}...")
+          print("demo smoke OK")
+          EOF
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile check + tips pool validity
+        run: |
+          python -m py_compile app.py chain_chat/*.py scripts/*.py
+          python - <<'EOF'
+          import json
+          pool = json.load(open("scripts/tips_pool.json"))
+          assert len(pool) >= 20, "tips pool must have >= 20 entries"
+          for t in pool:
+              assert t["title"] and t["body"]
+          print(f"tips pool OK: {len(pool)} entries")
+          EOF

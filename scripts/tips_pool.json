@@ -1,0 +1,122 @@
+[
+  {
+    "title": "Normalize token amounts before you compare anything",
+    "body": "Transfer amounts live in token units with wildly different decimals (USDC=6, UNI/WETH=18). Always multiply by tokens.usd_reference_price when comparing volume across tokens — raw amount sums are apples-to-oranges. In chain-chat: `SELECT token, ROUND(SUM(amount * t.usd_reference_price), 2) AS usd_volume FROM transfers x JOIN tokens t ON t.token = x.token GROUP BY 1 ORDER BY 2 DESC`.",
+    "command": "python -c \"from chain_chat.golden import run_golden; print(run_golden(ChainDB('data/snapshot')))\""
+  },
+  {
+    "title": "\"Yesterday\" is a window, not a constant",
+    "body": "On-chain datasets lag (indexers, finality, timezones). Hardcoding CURDATE() in analytics SQL silently excludes recent blocks. Anchor to the data itself: `WITH d AS (SELECT CAST(max(ts) AS DATE) - INTERVAL 1 DAY AS day FROM transfers)` — that is exactly what chain-chat's flagship question does.",
+    "command": "duckdb data/snapshot/chainchat.db \"WITH d AS (SELECT CAST(max(ts) AS DATE) - INTERVAL 1 DAY AS day FROM transfers) SELECT day FROM d\""
+  },
+  {
+    "title": "Labeled addresses are joins, not constants",
+    "body": "Don't hardcode 0x addresses in your queries. Keep an address → label registry (chain-chat ships labels.parquet) and JOIN on it: `SELECT l.label, COUNT(*) FROM transfers x JOIN labels l ON l.address = x.from_address GROUP BY 1 ORDER BY 2 DESC LIMIT 5`. Labels drift; joins don't.",
+    "command": "duckdb data/snapshot/chainchat.db \"SELECT category, COUNT(*) FROM labels GROUP BY 1 ORDER BY 2 DESC\""
+  },
+  {
+    "title": "ERC-20 Transfer events: sender vs. spender",
+    "body": "The Transfer event's `from` is the token holder, not the msg.sender. When someone burns allowance via a router, Transfer(from=holder, to=router). Analysts who treat `from` as \"the actor\" misattribute flows — cross-reference the transaction's actual sender for the true initiator.",
+    "command": "SELECT from_address, to_address, COUNT(*) AS n FROM transfers GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 10"
+  },
+  {
+    "title": "Volume ≠ liquidity",
+    "body": "A token with $100M transfer volume can still be deeply illiquid if most of it ping-pongs between two hot wallets. When ranking 'most moved', look past the top line: count distinct counterparties (COUNT(DISTINCT to_address)) and distribution (stddev) before calling something liquid.",
+    "command": "SELECT token, COUNT(DISTINCT to_address) AS counterparties FROM transfers GROUP BY 1"
+  },
+  {
+    "title": "Run a trend, not a point-in-time number",
+    "body": "Single-day aggregates mislead. Report 7-day windows when answering 'how much moved': `WITH win AS (SELECT max(ts) - INTERVAL 7 DAY AS lo FROM transfers) SELECT CAST(ts AS DATE) AS day, COUNT(*) FROM transfers, win WHERE ts >= win.lo GROUP BY 1 ORDER BY 1` — 7 bars tell you more than 1 number.",
+    "command": "duckdb data/snapshot/chainchat.db \"WITH win AS (SELECT max(ts) - INTERVAL 7 DAY AS lo FROM transfers) SELECT CAST(ts AS DATE) AS day, COUNT(*) AS n FROM transfers, win WHERE ts >= win.lo GROUP BY 1 ORDER BY 1\""
+  },
+  {
+    "title": "Query parameters defeat injection — every time",
+    "body": "Never interpolate user input into SQL strings. Binding via ? or $name keeps hostile input data, not code: `SELECT * FROM transfers WHERE token = ?` with param \"usdc' OR '1'='1\" returns zero rows instead of wrecking your query. chain-chat enforces this in chain_chat/db.py.",
+    "command": "duckdb data/snapshot/chainchat.db \"PREPARE q AS SELECT COUNT(*) FROM transfers WHERE token = ?\""
+  },
+  {
+    "title": "DuckDB reads parquet directly — skip the ETL",
+    "body": "For one-off analytics you don't need a warehouse. `duckdb -c \"SELECT COUNT(*) FROM 'transfers.parquet'\"` queries the file in place, vectorized, often faster than a loaded DB. chain-chat compiles a read-only .db for safety, but the parquet files are the source of truth.",
+    "command": "duckdb -c \"SELECT COUNT(*) FROM 'data/snapshot/transfers.parquet'\""
+  },
+  {
+    "title": "Checkpoint: block ranges are your timezone",
+    "body": "Ethereum produces ~7,200 blocks/day. Financial analytics should bucket by block, not wall-clock: `(block_number / 7200)` gives you a stable day bucket that survives indexer delays, reorgs and DST. Use timestamps for display, blocks for math.",
+    "command": "SELECT (block_number / 7200) AS day_bucket, COUNT(*) FROM transfers GROUP BY 1 ORDER BY 1 DESC LIMIT 7"
+  },
+  {
+    "title": "Suspicious flow? Look at the recipient's history",
+    "body": "A single large transfer into an EOA is noise; the same EOA receiving 50 transfers from 50 different tokens in 1 hour is a pattern (sweeper bot, mixer entry). Windowed counterparty counts per address are the cheapest wash-trading/sweep detector there is.",
+    "command": "SELECT to_address, COUNT(DISTINCT token) AS tokens_in FROM transfers GROUP BY 1 HAVING COUNT(DISTINCT token) >= 3 ORDER BY 2 DESC LIMIT 5"
+  },
+  {
+    "title": "UNION ALL beats OR for disjoint buckets",
+    "body": "When splitting flows by category (exchange vs defi vs bridge), UNION ALL of filtered subqueries is often clearer and lets DuckDB parallelize partitions — and it keeps each bucket's filter explicit for review, which matters when a human must audit the logic.",
+    "command": "SELECT 'exchange' AS bucket, COUNT(*) FROM transfers x JOIN labels l ON l.address = x.to_address WHERE l.category = 'exchange' UNION ALL SELECT 'defi', COUNT(*) FROM transfers x JOIN labels l ON l.address = x.to_address WHERE l.category = 'defi'"
+  },
+  {
+    "title": "Percentiles, not just averages, for transfer sizes",
+    "body": "Lognormal transfer distributions make the mean useless. Report P50/P90/P99: `quantile_cont(amount, 0.5)`, `quantile_cont(amount, 0.9)`. chain-chat's synthetic data is deliberately lognormal — the median is a fraction of the mean.",
+    "command": "SELECT token, ROUND(quantile_cont(amount, 0.5), 2) AS p50, ROUND(quantile_cont(amount, 0.9), 2) AS p90 FROM transfers GROUP BY 1"
+  },
+  {
+    "title": "WETH is not ETH",
+    "body": "Wrapped Ether is an ERC-20; native ETH moves have no Transfer event. If your dataset tracks only ERC-20 transfers, you are blind to raw ETH flows — a common gap when estimating 'total value moved'. Say 'token transfer volume', not 'on-chain volume'.",
+    "command": "SELECT DISTINCT token FROM transfers ORDER BY 1"
+  },
+  {
+    "title": "CTEs are the documentation your future self needs",
+    "body": "A 200-line nested subquery reads like a stack of receipts; the same logic as 4 named CTEs reads like a report: define `yesterday`, `volume`, then `SELECT`. Every chain-chat golden query uses this shape so the 'why' survives the 'what'.",
+    "command": "duckdb data/snapshot/chainchat.db \"WITH d AS (SELECT CAST(max(ts) AS DATE) - INTERVAL 1 DAY AS day FROM transfers) SELECT COUNT(*) FROM transfers, d WHERE CAST(ts AS DATE) = d.day\""
+  },
+  {
+    "title": "Read-only connections for untrusted SQL",
+    "body": "Guardrails are code; read-only connections are physics. Open analytics against duckdb connect(path, read_only=True) so even a buggy/LLM-generated query cannot mutate state. chain-chat does both: guardrails in chain_chat/guardrails.py AND read_only=True in chain_chat/db.py.",
+    "command": "python -c \"import duckdb; c = duckdb.connect('data/snapshot/chainchat.db', read_only=True)\""
+  },
+  {
+    "title": "Timeouts turn runaway queries into error messages",
+    "body": "An LLM-generated query can accidentally be O(n³). Guard with a wall-clock timeout and interrupt() — a 2-second error is a feature, a 20-minute hang is an outage. chain-chat's db.query() interrupts on timeout and transparently reconnects.",
+    "command": "duckdb data/snapshot/chainchat.db -c \"SET statement_timeout='5s'\""
+  },
+  {
+    "title": "Approximate counts for huge tables",
+    "body": "When a table outgrows COUNT(*), DuckDB's approx_count_distinct (HyperLogLog) is ~1000x cheaper for 'how many unique addresses' style questions and accuracy is plenty for trend analysis. Exact counts only when auditing.",
+    "command": "SELECT approx_count_distinct(from_address) AS approx_senders FROM transfers"
+  },
+  {
+    "title": "Test your SQL against golden queries",
+    "body": "NL→SQL systems rot silently: a new schema column or indexer change breaks generated queries nobody re-ran. Keep a golden file of question → SQL → expected-shape checks and run it in CI. chain-chat ships chain_chat/golden.py with 7 checks — 65 tests cover the stack.",
+    "command": "python -m pytest tests/ -q"
+  },
+  {
+    "title": "LEFT JOIN labels; don't filter them",
+    "body": "When enriching flows with known addresses, use LEFT JOIN so unknown senders stay visible, then bucket with CASE: `CASE WHEN l.label IS NULL THEN 'unlabeled' ELSE l.category END`. Filtering with INNER JOIN silently deletes the majority of on-chain traffic from your analysis.",
+    "command": "SELECT CASE WHEN l.label IS NULL THEN 'unlabeled' ELSE l.category END AS who, COUNT(*) FROM transfers x LEFT JOIN labels l ON l.address = x.from_address GROUP BY 1 ORDER BY 2 DESC"
+  },
+  {
+    "title": "Synthetic data is a feature for demo apps",
+    "body": "Production-funded demos can't ship real mainnet flows. Deterministic, seeded synthetic data (lognormal sizes, labeled actors, busy-day clustering) gives you reproducible screenshots, tests and CI — and zero liability. chain-chat regenerates its snapshot with one command.",
+    "command": "python scripts/fetch_parquet.py --seed 42"
+  },
+  {
+    "title": "DuckDB is embeddable — your whole analytics stack is one file",
+    "body": "A DuckDB database is a single .db file: tables, metadata, no server, no port. Ship it with your repo, open it read-only, query it. That's the entire chain-chat storage layer — which is why the bundled snapshot is ~8 MB, not a cloud account.",
+    "command": "du -sh data/snapshot/chainchat.db"
+  },
+  {
+    "title": "Timestamps: store UTC, display local",
+    "body": "Block timestamps are UTC by definition. If you render them in local time without marking it, your 'daily' aggregates silently shift by your timezone. Keep ts as TIMESTAMP UTC and apply timezone only at presentation: `CAST(ts AS TIMESTAMPTZ)`.",
+    "command": "SELECT ts, CAST(ts AS TIMESTAMPTZ) AS local FROM transfers LIMIT 3"
+  },
+  {
+    "title": "The cheapest anomaly detector is ORDER BY DESC",
+    "body": "Before building ML, sort and look: `ORDER BY amount DESC LIMIT 10` per token. The synthetic top-mover and outlier-transfers questions in chain-chat are exactly this — most 'anomalies' are just the head of a long tail.",
+    "command": "SELECT token, amount FROM transfers ORDER BY amount DESC LIMIT 10"
+  },
+  {
+    "title": "Chain explorers are for humans; parquet is for you",
+    "body": "Point-and-click explorers cap results and export CSVs by hand. The same dataset as parquet + DuckDB gives you full SQL, reproducible pipelines, and diffable files — the difference between a screenshot and an analysis.",
+    "command": "duckdb data/snapshot/chainchat.db \"DESCRIBE transfers\""
+  }
+]

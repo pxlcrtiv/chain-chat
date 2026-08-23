@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Chain-chat runtime
+.daily-pause
+.streamlit/secrets.toml
+*.log

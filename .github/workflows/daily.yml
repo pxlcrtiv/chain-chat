@@ -1,0 +1,36 @@
+name: Daily Green
+
+# Cloud fallback for the Daily Green automation: if the local launchd job
+# missed a day, the next push-triggered (or scheduled) run of this workflow
+# catches up via scripts/daily_update.py (idempotent, dated commits).
+# NOTE: the pxlcrtiv account currently has its Actions runners blocked by a
+# billing lock, so this workflow is validated locally and reserved as the
+# cloud fallback — see README, "Daily Green automation".
+
+on:
+  schedule:
+    - cron: "0 12 * * *"          # daily 12:00 UTC
+  workflow_dispatch: {}           # manual catch-up
+
+permissions:
+  contents: write
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run Daily Green
+        env:
+          GIT_AUTHOR_NAME: pxlcrtiv
+          GIT_AUTHOR_EMAIL: pxlcrtiv@users.noreply.github.com
+          GIT_COMMITTER_NAME: pxlcrtiv
+          GIT_COMMITTER_EMAIL: pxlcrtiv@users.noreply.github.com
+        run: python scripts/daily_update.py
