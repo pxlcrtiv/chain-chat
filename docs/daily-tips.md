@@ -13,3 +13,10 @@ Transfer amounts live in token units with wildly different decimals (USDC=6, UNI
 
 > `python -c "from chain_chat.golden import run_golden; print(run_golden(ChainDB('data/snapshot')))"`
 
+
+## 2026-08-24 — Tip of the day: "Yesterday" is a window, not a constant
+
+On-chain datasets lag (indexers, finality, timezones). Hardcoding CURDATE() in analytics SQL silently excludes recent blocks. Anchor to the data itself: `WITH d AS (SELECT CAST(max(ts) AS DATE) - INTERVAL 1 DAY AS day FROM transfers)` — that is exactly what chain-chat's flagship question does.
+
+> `duckdb data/snapshot/chainchat.db "WITH d AS (SELECT CAST(max(ts) AS DATE) - INTERVAL 1 DAY AS day FROM transfers) SELECT day FROM d"`
+
