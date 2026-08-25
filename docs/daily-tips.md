@@ -20,3 +20,10 @@ On-chain datasets lag (indexers, finality, timezones). Hardcoding CURDATE() in a
 
 > `duckdb data/snapshot/chainchat.db "WITH d AS (SELECT CAST(max(ts) AS DATE) - INTERVAL 1 DAY AS day FROM transfers) SELECT day FROM d"`
 
+
+## 2026-08-25 — Tip of the day: Labeled addresses are joins, not constants
+
+Don't hardcode 0x addresses in your queries. Keep an address → label registry (chain-chat ships labels.parquet) and JOIN on it: `SELECT l.label, COUNT(*) FROM transfers x JOIN labels l ON l.address = x.from_address GROUP BY 1 ORDER BY 2 DESC LIMIT 5`. Labels drift; joins don't.
+
+> `duckdb data/snapshot/chainchat.db "SELECT category, COUNT(*) FROM labels GROUP BY 1 ORDER BY 2 DESC"`
+
