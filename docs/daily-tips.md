@@ -27,3 +27,10 @@ Don't hardcode 0x addresses in your queries. Keep an address → label registry 
 
 > `duckdb data/snapshot/chainchat.db "SELECT category, COUNT(*) FROM labels GROUP BY 1 ORDER BY 2 DESC"`
 
+
+## 2026-08-26 — Tip of the day: ERC-20 Transfer events: sender vs. spender
+
+The Transfer event's `from` is the token holder, not the msg.sender. When someone burns allowance via a router, Transfer(from=holder, to=router). Analysts who treat `from` as "the actor" misattribute flows — cross-reference the transaction's actual sender for the true initiator.
+
+> `SELECT from_address, to_address, COUNT(*) AS n FROM transfers GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 10`
+
