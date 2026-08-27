@@ -34,3 +34,10 @@ The Transfer event's `from` is the token holder, not the msg.sender. When someon
 
 > `SELECT from_address, to_address, COUNT(*) AS n FROM transfers GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 10`
 
+
+## 2026-08-27 — Tip of the day: Volume ≠ liquidity
+
+A token with $100M transfer volume can still be deeply illiquid if most of it ping-pongs between two hot wallets. When ranking 'most moved', look past the top line: count distinct counterparties (COUNT(DISTINCT to_address)) and distribution (stddev) before calling something liquid.
+
+> `SELECT token, COUNT(DISTINCT to_address) AS counterparties FROM transfers GROUP BY 1`
+
