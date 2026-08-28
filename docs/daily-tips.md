@@ -41,3 +41,10 @@ A token with $100M transfer volume can still be deeply illiquid if most of it pi
 
 > `SELECT token, COUNT(DISTINCT to_address) AS counterparties FROM transfers GROUP BY 1`
 
+
+## 2026-08-28 — Tip of the day: Run a trend, not a point-in-time number
+
+Single-day aggregates mislead. Report 7-day windows when answering 'how much moved': `WITH win AS (SELECT max(ts) - INTERVAL 7 DAY AS lo FROM transfers) SELECT CAST(ts AS DATE) AS day, COUNT(*) FROM transfers, win WHERE ts >= win.lo GROUP BY 1 ORDER BY 1` — 7 bars tell you more than 1 number.
+
+> `duckdb data/snapshot/chainchat.db "WITH win AS (SELECT max(ts) - INTERVAL 7 DAY AS lo FROM transfers) SELECT CAST(ts AS DATE) AS day, COUNT(*) AS n FROM transfers, win WHERE ts >= win.lo GROUP BY 1 ORDER BY 1"`
+
