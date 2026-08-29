@@ -48,3 +48,10 @@ Single-day aggregates mislead. Report 7-day windows when answering 'how much mov
 
 > `duckdb data/snapshot/chainchat.db "WITH win AS (SELECT max(ts) - INTERVAL 7 DAY AS lo FROM transfers) SELECT CAST(ts AS DATE) AS day, COUNT(*) AS n FROM transfers, win WHERE ts >= win.lo GROUP BY 1 ORDER BY 1"`
 
+
+## 2026-08-29 — Tip of the day: Query parameters defeat injection — every time
+
+Never interpolate user input into SQL strings. Binding via ? or $name keeps hostile input data, not code: `SELECT * FROM transfers WHERE token = ?` with param "usdc' OR '1'='1" returns zero rows instead of wrecking your query. chain-chat enforces this in chain_chat/db.py.
+
+> `duckdb data/snapshot/chainchat.db "PREPARE q AS SELECT COUNT(*) FROM transfers WHERE token = ?"`
+
