@@ -55,3 +55,10 @@ Never interpolate user input into SQL strings. Binding via ? or $name keeps host
 
 > `duckdb data/snapshot/chainchat.db "PREPARE q AS SELECT COUNT(*) FROM transfers WHERE token = ?"`
 
+
+## 2026-08-30 — Tip of the day: DuckDB reads parquet directly — skip the ETL
+
+For one-off analytics you don't need a warehouse. `duckdb -c "SELECT COUNT(*) FROM 'transfers.parquet'"` queries the file in place, vectorized, often faster than a loaded DB. chain-chat compiles a read-only .db for safety, but the parquet files are the source of truth.
+
+> `duckdb -c "SELECT COUNT(*) FROM 'data/snapshot/transfers.parquet'"`
+
