@@ -62,3 +62,10 @@ For one-off analytics you don't need a warehouse. `duckdb -c "SELECT COUNT(*) FR
 
 > `duckdb -c "SELECT COUNT(*) FROM 'data/snapshot/transfers.parquet'"`
 
+
+## 2026-08-31 — Tip of the day: Checkpoint: block ranges are your timezone
+
+Ethereum produces ~7,200 blocks/day. Financial analytics should bucket by block, not wall-clock: `(block_number / 7200)` gives you a stable day bucket that survives indexer delays, reorgs and DST. Use timestamps for display, blocks for math.
+
+> `SELECT (block_number / 7200) AS day_bucket, COUNT(*) FROM transfers GROUP BY 1 ORDER BY 1 DESC LIMIT 7`
+
