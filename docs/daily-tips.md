@@ -69,3 +69,10 @@ Ethereum produces ~7,200 blocks/day. Financial analytics should bucket by block,
 
 > `SELECT (block_number / 7200) AS day_bucket, COUNT(*) FROM transfers GROUP BY 1 ORDER BY 1 DESC LIMIT 7`
 
+
+## 2026-09-01 — Tip of the day: Suspicious flow? Look at the recipient's history
+
+A single large transfer into an EOA is noise; the same EOA receiving 50 transfers from 50 different tokens in 1 hour is a pattern (sweeper bot, mixer entry). Windowed counterparty counts per address are the cheapest wash-trading/sweep detector there is.
+
+> `SELECT to_address, COUNT(DISTINCT token) AS tokens_in FROM transfers GROUP BY 1 HAVING COUNT(DISTINCT token) >= 3 ORDER BY 2 DESC LIMIT 5`
+
