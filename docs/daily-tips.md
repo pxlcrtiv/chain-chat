@@ -76,3 +76,10 @@ A single large transfer into an EOA is noise; the same EOA receiving 50 transfer
 
 > `SELECT to_address, COUNT(DISTINCT token) AS tokens_in FROM transfers GROUP BY 1 HAVING COUNT(DISTINCT token) >= 3 ORDER BY 2 DESC LIMIT 5`
 
+
+## 2026-09-02 — Tip of the day: UNION ALL beats OR for disjoint buckets
+
+When splitting flows by category (exchange vs defi vs bridge), UNION ALL of filtered subqueries is often clearer and lets DuckDB parallelize partitions — and it keeps each bucket's filter explicit for review, which matters when a human must audit the logic.
+
+> `SELECT 'exchange' AS bucket, COUNT(*) FROM transfers x JOIN labels l ON l.address = x.to_address WHERE l.category = 'exchange' UNION ALL SELECT 'defi', COUNT(*) FROM transfers x JOIN labels l ON l.address = x.to_address WHERE l.category = 'defi'`
+
