@@ -83,3 +83,10 @@ When splitting flows by category (exchange vs defi vs bridge), UNION ALL of filt
 
 > `SELECT 'exchange' AS bucket, COUNT(*) FROM transfers x JOIN labels l ON l.address = x.to_address WHERE l.category = 'exchange' UNION ALL SELECT 'defi', COUNT(*) FROM transfers x JOIN labels l ON l.address = x.to_address WHERE l.category = 'defi'`
 
+
+## 2026-09-03 — Tip of the day: Percentiles, not just averages, for transfer sizes
+
+Lognormal transfer distributions make the mean useless. Report P50/P90/P99: `quantile_cont(amount, 0.5)`, `quantile_cont(amount, 0.9)`. chain-chat's synthetic data is deliberately lognormal — the median is a fraction of the mean.
+
+> `SELECT token, ROUND(quantile_cont(amount, 0.5), 2) AS p50, ROUND(quantile_cont(amount, 0.9), 2) AS p90 FROM transfers GROUP BY 1`
+
