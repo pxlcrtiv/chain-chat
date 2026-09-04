@@ -90,3 +90,10 @@ Lognormal transfer distributions make the mean useless. Report P50/P90/P99: `qua
 
 > `SELECT token, ROUND(quantile_cont(amount, 0.5), 2) AS p50, ROUND(quantile_cont(amount, 0.9), 2) AS p90 FROM transfers GROUP BY 1`
 
+
+## 2026-09-04 — Tip of the day: WETH is not ETH
+
+Wrapped Ether is an ERC-20; native ETH moves have no Transfer event. If your dataset tracks only ERC-20 transfers, you are blind to raw ETH flows — a common gap when estimating 'total value moved'. Say 'token transfer volume', not 'on-chain volume'.
+
+> `SELECT DISTINCT token FROM transfers ORDER BY 1`
+
