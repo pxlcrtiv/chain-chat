@@ -97,3 +97,10 @@ Wrapped Ether is an ERC-20; native ETH moves have no Transfer event. If your dat
 
 > `SELECT DISTINCT token FROM transfers ORDER BY 1`
 
+
+## 2026-09-05 — Tip of the day: CTEs are the documentation your future self needs
+
+A 200-line nested subquery reads like a stack of receipts; the same logic as 4 named CTEs reads like a report: define `yesterday`, `volume`, then `SELECT`. Every chain-chat golden query uses this shape so the 'why' survives the 'what'.
+
+> `duckdb data/snapshot/chainchat.db "WITH d AS (SELECT CAST(max(ts) AS DATE) - INTERVAL 1 DAY AS day FROM transfers) SELECT COUNT(*) FROM transfers, d WHERE CAST(ts AS DATE) = d.day"`
+
