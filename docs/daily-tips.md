@@ -104,3 +104,10 @@ A 200-line nested subquery reads like a stack of receipts; the same logic as 4 n
 
 > `duckdb data/snapshot/chainchat.db "WITH d AS (SELECT CAST(max(ts) AS DATE) - INTERVAL 1 DAY AS day FROM transfers) SELECT COUNT(*) FROM transfers, d WHERE CAST(ts AS DATE) = d.day"`
 
+
+## 2026-09-06 — Tip of the day: Read-only connections for untrusted SQL
+
+Guardrails are code; read-only connections are physics. Open analytics against duckdb connect(path, read_only=True) so even a buggy/LLM-generated query cannot mutate state. chain-chat does both: guardrails in chain_chat/guardrails.py AND read_only=True in chain_chat/db.py.
+
+> `python -c "import duckdb; c = duckdb.connect('data/snapshot/chainchat.db', read_only=True)"`
+
