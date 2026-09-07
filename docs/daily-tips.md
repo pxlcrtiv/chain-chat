@@ -111,3 +111,10 @@ Guardrails are code; read-only connections are physics. Open analytics against d
 
 > `python -c "import duckdb; c = duckdb.connect('data/snapshot/chainchat.db', read_only=True)"`
 
+
+## 2026-09-07 — Tip of the day: Timeouts turn runaway queries into error messages
+
+An LLM-generated query can accidentally be O(n³). Guard with a wall-clock timeout and interrupt() — a 2-second error is a feature, a 20-minute hang is an outage. chain-chat's db.query() interrupts on timeout and transparently reconnects.
+
+> `duckdb data/snapshot/chainchat.db -c "SET statement_timeout='5s'"`
+
