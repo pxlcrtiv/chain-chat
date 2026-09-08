@@ -118,3 +118,10 @@ An LLM-generated query can accidentally be O(n³). Guard with a wall-clock timeo
 
 > `duckdb data/snapshot/chainchat.db -c "SET statement_timeout='5s'"`
 
+
+## 2026-09-08 — Tip of the day: Approximate counts for huge tables
+
+When a table outgrows COUNT(*), DuckDB's approx_count_distinct (HyperLogLog) is ~1000x cheaper for 'how many unique addresses' style questions and accuracy is plenty for trend analysis. Exact counts only when auditing.
+
+> `SELECT approx_count_distinct(from_address) AS approx_senders FROM transfers`
+
