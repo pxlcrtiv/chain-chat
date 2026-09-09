@@ -125,3 +125,10 @@ When a table outgrows COUNT(*), DuckDB's approx_count_distinct (HyperLogLog) is 
 
 > `SELECT approx_count_distinct(from_address) AS approx_senders FROM transfers`
 
+
+## 2026-09-09 — Tip of the day: Test your SQL against golden queries
+
+NL→SQL systems rot silently: a new schema column or indexer change breaks generated queries nobody re-ran. Keep a golden file of question → SQL → expected-shape checks and run it in CI. chain-chat ships chain_chat/golden.py with 7 checks — 65 tests cover the stack.
+
+> `python -m pytest tests/ -q`
+
