@@ -132,3 +132,10 @@ NL→SQL systems rot silently: a new schema column or indexer change breaks gene
 
 > `python -m pytest tests/ -q`
 
+
+## 2026-09-10 — Tip of the day: LEFT JOIN labels; don't filter them
+
+When enriching flows with known addresses, use LEFT JOIN so unknown senders stay visible, then bucket with CASE: `CASE WHEN l.label IS NULL THEN 'unlabeled' ELSE l.category END`. Filtering with INNER JOIN silently deletes the majority of on-chain traffic from your analysis.
+
+> `SELECT CASE WHEN l.label IS NULL THEN 'unlabeled' ELSE l.category END AS who, COUNT(*) FROM transfers x LEFT JOIN labels l ON l.address = x.from_address GROUP BY 1 ORDER BY 2 DESC`
+
