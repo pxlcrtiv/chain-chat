@@ -139,3 +139,10 @@ When enriching flows with known addresses, use LEFT JOIN so unknown senders stay
 
 > `SELECT CASE WHEN l.label IS NULL THEN 'unlabeled' ELSE l.category END AS who, COUNT(*) FROM transfers x LEFT JOIN labels l ON l.address = x.from_address GROUP BY 1 ORDER BY 2 DESC`
 
+
+## 2026-09-11 — Tip of the day: Synthetic data is a feature for demo apps
+
+Production-funded demos can't ship real mainnet flows. Deterministic, seeded synthetic data (lognormal sizes, labeled actors, busy-day clustering) gives you reproducible screenshots, tests and CI — and zero liability. chain-chat regenerates its snapshot with one command.
+
+> `python scripts/fetch_parquet.py --seed 42`
+
