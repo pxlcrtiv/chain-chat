@@ -146,3 +146,10 @@ Production-funded demos can't ship real mainnet flows. Deterministic, seeded syn
 
 > `python scripts/fetch_parquet.py --seed 42`
 
+
+## 2026-09-12 — Tip of the day: DuckDB is embeddable — your whole analytics stack is one file
+
+A DuckDB database is a single .db file: tables, metadata, no server, no port. Ship it with your repo, open it read-only, query it. That's the entire chain-chat storage layer — which is why the bundled snapshot is ~8 MB, not a cloud account.
+
+> `du -sh data/snapshot/chainchat.db`
+
