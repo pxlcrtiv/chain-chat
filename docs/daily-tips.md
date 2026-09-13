@@ -153,3 +153,10 @@ A DuckDB database is a single .db file: tables, metadata, no server, no port. Sh
 
 > `du -sh data/snapshot/chainchat.db`
 
+
+## 2026-09-13 — Tip of the day: Timestamps: store UTC, display local
+
+Block timestamps are UTC by definition. If you render them in local time without marking it, your 'daily' aggregates silently shift by your timezone. Keep ts as TIMESTAMP UTC and apply timezone only at presentation: `CAST(ts AS TIMESTAMPTZ)`.
+
+> `SELECT ts, CAST(ts AS TIMESTAMPTZ) AS local FROM transfers LIMIT 3`
+
