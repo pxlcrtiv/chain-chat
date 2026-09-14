@@ -160,3 +160,10 @@ Block timestamps are UTC by definition. If you render them in local time without
 
 > `SELECT ts, CAST(ts AS TIMESTAMPTZ) AS local FROM transfers LIMIT 3`
 
+
+## 2026-09-14 — Tip of the day: The cheapest anomaly detector is ORDER BY DESC
+
+Before building ML, sort and look: `ORDER BY amount DESC LIMIT 10` per token. The synthetic top-mover and outlier-transfers questions in chain-chat are exactly this — most 'anomalies' are just the head of a long tail.
+
+> `SELECT token, amount FROM transfers ORDER BY amount DESC LIMIT 10`
+
