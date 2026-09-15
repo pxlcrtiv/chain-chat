@@ -167,3 +167,10 @@ Before building ML, sort and look: `ORDER BY amount DESC LIMIT 10` per token. Th
 
 > `SELECT token, amount FROM transfers ORDER BY amount DESC LIMIT 10`
 
+
+## 2026-09-15 — Tip of the day: Chain explorers are for humans; parquet is for you
+
+Point-and-click explorers cap results and export CSVs by hand. The same dataset as parquet + DuckDB gives you full SQL, reproducible pipelines, and diffable files — the difference between a screenshot and an analysis.
+
+> `duckdb data/snapshot/chainchat.db "DESCRIBE transfers"`
+
