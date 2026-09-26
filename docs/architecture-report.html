@@ -10,7 +10,7 @@
 </head>
 <body class="bg-gray-950 text-gray-200 p-6 max-w-5xl mx-auto">
 <h1 class="text-2xl font-bold text-white mb-1">Architecture Report</h1>
-<p class="text-sm text-gray-500 mb-6">/Users/admin/portfolio/repos/chain-chat — scanned 2026-09-26T14:36:03.379129+00:00</p>
+<p class="text-sm text-gray-500 mb-6">/Users/admin/portfolio/repos/chain-chat — scanned 2026-09-26T14:37:30.238735+00:00</p>
 
 <div class="grid grid-cols-3 gap-4 mb-8">
   <div class="bg-gray-900 rounded-lg p-4 text-center">
@@ -28,15 +28,31 @@
 </div>
 
 
+    <div class="bg-gray-900 border border-amber-500/30 rounded-lg p-4 mb-6">
+      <div class="text-sm text-amber-400 font-semibold mb-1">Top recommendation</div>
+      <code class="text-white">tests/test_canned.py</code>
+      <p class="text-sm text-gray-400 mt-1">Shallow module: 7 exports, 58 lines</p>
+      <p class="text-xs text-gray-600 mt-2">Run the full <code>improve-codebase-architecture</code> skill on this repo to grill through the deepening.</p>
+    </div>
+
         <h2 class="text-lg font-semibold text-white mt-8 mb-3">Shallow Modules</h2>
         
         <div class="bg-gray-900 rounded-lg p-4 mb-3">
-          <div class="flex justify-between items-start">
+          <div class="flex justify-between items-start mb-3">
             <code class="text-sm text-amber-400">tests/test_canned.py</code>
             <span class="inline-block px-2 py-0.5 rounded text-xs font-bold text-white bg-amber-500">Worth exploring</span>
           </div>
-          <p class="text-sm mt-2 text-gray-400">7 public exports, 58 lines, low internal complexity — interface nearly as complex as the body.</p>
-          <p class="text-xs text-gray-600 mt-1">Exports: canned, test_all_three_canned_questions_match, test_canned_answers_compute_real_numbers, test_canned_top_mover, test_canned_numbers_match_direct_computation, test_unknown_question_falls_back_gracefully, test_ask_uses_canned_without_llm</p>
+          <div class="grid grid-cols-2 gap-4 text-xs">
+            <div class="bg-gray-800 rounded p-3">
+              <div class="text-gray-500 mb-1">BEFORE — shallow</div>
+              <div class="text-gray-300">7 exports (canned, test_all_three_canned_questions_match, test_canned_answers_compute_real_numbers, test_canned_top_mover)<br>58 lines, ? decisions</div>
+            </div>
+            <div class="bg-gray-800 rounded p-3">
+              <div class="text-gray-500 mb-1">AFTER — deepened</div>
+              <div class="text-gray-300">Hide internals behind a seam<br>Reduce public surface by half</div>
+            </div>
+          </div>
+          <p class="text-xs text-gray-600 mt-2">Leverage: callers depend on fewer names. Locality: logic moves behind the interface.</p>
         </div>
 <h2 class="text-lg font-semibold text-white mt-8 mb-3">High Coupling</h2>
         <div class="bg-gray-900 rounded-lg p-4 mb-3">
@@ -52,6 +68,92 @@
           <p class="text-xs text-gray-500 mt-1">Imports 4 internal modules: chain_chat, chain_chat, chain_chat, chain_chat</p>
         </div>
 
+
+    <h2 class="text-lg font-semibold text-white mt-8 mb-3">Dependency Graph</h2>
+    <div class="bg-gray-900 rounded-lg p-4 mb-3">
+      <pre class="text-xs text-gray-400 overflow-x-auto">graph TD
+  app_py --> __future__
+  app_py --> os
+  app_py --> pathlib
+  app_py --> pandas
+  app_py --> streamlit
+  app_py --> chain_chat
+  chain_chat_db_py --> __future__
+  chain_chat_db_py --> json
+  chain_chat_db_py --> threading
+  chain_chat_db_py --> pathlib
+  chain_chat_db_py --> duckdb
+  chain_chat_db_py --> guardrails
+  chain_chat_golden_py --> __future__
+  chain_chat_golden_py --> db
+  chain_chat_canned_py --> __future__
+  chain_chat_canned_py --> dataclasses
+  chain_chat_canned_py --> typing
+  chain_chat_canned_py --> answers
+  chain_chat_canned_py --> db
+  chain_chat_answers_py --> __future__
+  chain_chat_answers_py --> re
+  chain_chat_answers_py --> dataclasses
+  chain_chat_nl2sql_py --> __future__
+  chain_chat_nl2sql_py --> json
+  chain_chat_nl2sql_py --> os
+  chain_chat_nl2sql_py --> typing
+  chain_chat_nl2sql_py --> requests
+  chain_chat_nl2sql_py --> answers
+  chain_chat_nl2sql_py --> canned
+  chain_chat_nl2sql_py --> db
+  chain_chat_nl2sql_py --> golden
+  chain_chat_nl2sql_py --> guardrails
+  chain_chat_guardrails_py --> __future__
+  chain_chat_guardrails_py --> re
+  chain_chat_guardrails_py --> dataclasses
+  chain_chat_live_py --> __future__
+  chain_chat_live_py --> os
+  chain_chat_live_py --> pathlib
+  chain_chat_snapshot_py --> __future__
+  chain_chat_snapshot_py --> datetime
+  chain_chat_snapshot_py --> hashlib
+  chain_chat_snapshot_py --> json
+  chain_chat_snapshot_py --> random
+  chain_chat_snapshot_py --> pathlib
+  chain_chat_snapshot_py --> duckdb
+  chain_chat_snapshot_py --> pandas
+  tests_test_canned_py --> pytest
+  tests_test_canned_py --> chain_chat
+  tests_test_golden_and_snapshot_py --> hashlib
+  tests_test_golden_and_snapshot_py --> subprocess
+  tests_test_golden_and_snapshot_py --> sys
+  tests_test_golden_and_snapshot_py --> pathlib
+  tests_test_golden_and_snapshot_py --> chain_chat
+  tests_conftest_py --> sys
+  tests_conftest_py --> pathlib
+  tests_conftest_py --> pytest
+  tests_conftest_py --> chain_chat
+  tests_test_mock_llm_py --> json
+  tests_test_mock_llm_py --> chain_chat
+  tests_test_db_py --> duckdb
+  tests_test_db_py --> pytest
+  tests_test_db_py --> chain_chat
+  tests_test_guardrails_py --> pytest
+  tests_test_guardrails_py --> chain_chat
+  tests_test_nl2sql_entry_py --> chain_chat
+  scripts_fetch_parquet_py --> __future__
+  scripts_fetch_parquet_py --> argparse
+  scripts_fetch_parquet_py --> datetime
+  scripts_fetch_parquet_py --> sys
+  scripts_fetch_parquet_py --> pathlib
+  scripts_fetch_parquet_py --> chain_chat
+  scripts_daily_update_py --> __future__
+  scripts_daily_update_py --> datetime
+  scripts_daily_update_py --> json
+  scripts_daily_update_py --> os
+  scripts_daily_update_py --> re
+  scripts_daily_update_py --> subprocess
+  scripts_daily_update_py --> sys
+  scripts_daily_update_py --> pathlib
+  scripts_smoke_py --> sys
+  scripts_smoke_py --> chain_chat</pre>
+    </div>
 
 </body>
 </html>
