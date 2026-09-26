@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Report — /Users/admin/portfolio/repos/chain-chat</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>mermaid{background:transparent;}</style>
+</head>
+<body class="bg-gray-950 text-gray-200 p-6 max-w-5xl mx-auto">
+<h1 class="text-2xl font-bold text-white mb-1">Architecture Report</h1>
+<p class="text-sm text-gray-500 mb-6">/Users/admin/portfolio/repos/chain-chat — scanned 2026-09-26T14:36:03.379129+00:00</p>
+
+<div class="grid grid-cols-3 gap-4 mb-8">
+  <div class="bg-gray-900 rounded-lg p-4 text-center">
+    <div class="text-3xl font-bold text-white">20</div>
+    <div class="text-xs text-gray-500 mt-1">Python files</div>
+  </div>
+  <div class="bg-gray-900 rounded-lg p-4 text-center">
+    <div class="text-3xl font-bold text-white">20</div>
+    <div class="text-xs text-gray-500 mt-1">Modules analyzed</div>
+  </div>
+  <div class="bg-gray-900 rounded-lg p-4 text-center">
+    <div class="text-3xl font-bold text-green-400">0</div>
+    <div class="text-xs text-gray-500 mt-1">Import cycles</div>
+  </div>
+</div>
+
+
+        <h2 class="text-lg font-semibold text-white mt-8 mb-3">Shallow Modules</h2>
+        
+        <div class="bg-gray-900 rounded-lg p-4 mb-3">
+          <div class="flex justify-between items-start">
+            <code class="text-sm text-amber-400">tests/test_canned.py</code>
+            <span class="inline-block px-2 py-0.5 rounded text-xs font-bold text-white bg-amber-500">Worth exploring</span>
+          </div>
+          <p class="text-sm mt-2 text-gray-400">7 public exports, 58 lines, low internal complexity — interface nearly as complex as the body.</p>
+          <p class="text-xs text-gray-600 mt-1">Exports: canned, test_all_three_canned_questions_match, test_canned_answers_compute_real_numbers, test_canned_top_mover, test_canned_numbers_match_direct_computation, test_unknown_question_falls_back_gracefully, test_ask_uses_canned_without_llm</p>
+        </div>
+<h2 class="text-lg font-semibold text-white mt-8 mb-3">High Coupling</h2>
+        <div class="bg-gray-900 rounded-lg p-4 mb-3">
+          <code class="text-sm text-purple-400">app.py</code>
+          <p class="text-xs text-gray-500 mt-1">Imports 4 internal modules: chain_chat, chain_chat, chain_chat, chain_chat</p>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4 mb-3">
+          <code class="text-sm text-purple-400">chain_chat/nl2sql.py</code>
+          <p class="text-xs text-gray-500 mt-1">Imports 5 internal modules: answers, canned, db, golden, guardrails</p>
+        </div>
+        <div class="bg-gray-900 rounded-lg p-4 mb-3">
+          <code class="text-sm text-purple-400">scripts/smoke.py</code>
+          <p class="text-xs text-gray-500 mt-1">Imports 4 internal modules: chain_chat, chain_chat, chain_chat, chain_chat</p>
+        </div>
+
+
+</body>
+</html>
