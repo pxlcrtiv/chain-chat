@@ -321,3 +321,10 @@ When enriching flows with known addresses, use LEFT JOIN so unknown senders stay
 
 > `SELECT CASE WHEN l.label IS NULL THEN 'unlabeled' ELSE l.category END AS who, COUNT(*) FROM transfers x LEFT JOIN labels l ON l.address = x.from_address GROUP BY 1 ORDER BY 2 DESC`
 
+
+## 2026-10-06 — Tip of the day: DuckDB is embeddable — your whole analytics stack is one file
+
+A DuckDB database is a single .db file: tables, metadata, no server, no port. Ship it with your repo, open it read-only, query it. That's the entire chain-chat storage layer — which is why the bundled snapshot is ~8 MB, not a cloud account.
+
+> `du -sh data/snapshot/chainchat.db`
+
